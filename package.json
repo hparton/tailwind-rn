@@ -19,6 +19,8 @@
 	},
 	"files": [
 		"index.js",
+		"build.js",
+		"tailwind.css",
 		"styles.json"
 	],
 	"keywords": [
