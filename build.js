@@ -11,8 +11,6 @@ const watch = require('node-watch');
 
 const compileTailwind = (filename = 'tailwind', config) => {
 	return new Promise((resolve, reject) => {
-		console.log(`Processing ./${filename}.css...`);
-
 		const css = fs.readFileSync(
 			path.resolve(__dirname, `./${filename}.css`),
 			'utf8'
@@ -25,6 +23,7 @@ const compileTailwind = (filename = 'tailwind', config) => {
 				map: {inline: false}
 			})
 			.then(result => {
+				console.log(`Tailwind styles rebuilt.`);
 				resolve(result);
 			})
 			.catch(error => {
@@ -172,7 +171,7 @@ if (yargs.argv.config) {
 	const customConfig = path.resolve(process.cwd(), yargs.argv.config);
 	if (yargs.argv.watch) {
 		watch(customConfig, {recursive: true}, (evt, name) => {
-			console.log('%s changed.', name);
+			console.log('%s updated, rebuilding styles...', name);
 			compileTailwind('tailwind', customConfig).then(result => {
 				const {stylesheet} = css.parse(result.css);
 				mapClassNames(stylesheet);
