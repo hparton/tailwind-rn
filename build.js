@@ -20,7 +20,7 @@ const compileTailwind = (filename = 'tailwind', config) => {
 			'utf8'
 		);
 
-		return postcss([tailwind(config), require('autoprefixer')])
+		return postcss([tailwind(config)])
 			.process(css, {
 				from: path.resolve(__dirname, `./${filename}.css`),
 				to: path.resolve(__dirname, `./dist/${filename}.css`),
@@ -169,9 +169,9 @@ const mapClassNames = stylesheet => {
 };
 
 const pkgPath = require.resolve('tailwindcss').replace(pkgJson.main, '');
-const customConfig = path.resolve(process.cwd(), yargs.argv.config);
 
-if (fs.existsSync(customConfig)) {
+if (yargs.argv.config) {
+	const customConfig = path.resolve(process.cwd(), yargs.argv.config);
 	if (yargs.argv.watch) {
 		watch(customConfig, {recursive: true}, function(evt, name) {
 			console.log('%s changed.', name);

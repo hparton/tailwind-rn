@@ -34,7 +34,10 @@
 		"prettier": "^1.19.1",
 		"tailwindcss": "^1.2.0",
 		"xo": "^0.27.2",
-		"postcss": "^7.0.29"
+		"postcss": "^7.0.29",
+		"clean-css": "^4.2.3",
+		"node-watch": "^0.6.4",
+		"yargs": "^15.3.1"
 	},
 	"ava": {
 		"babel": true
@@ -43,10 +46,5 @@
 		"useTabs": true,
 		"singleQuote": true,
 		"bracketSpacing": false
-	},
-	"dependencies": {
-		"clean-css": "^4.2.3",
-		"node-watch": "^0.6.4",
-		"yargs": "^15.3.1"
 	}
 }
