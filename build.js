@@ -2,45 +2,72 @@
 const path = require('path');
 const fs = require('fs');
 const css = require('css');
+const process = require('process');
+const postcss = require('postcss');
+const tailwind = require('tailwindcss');
+const CleanCSS = require('clean-css');
 const cssToReactNative = require('css-to-react-native').default;
 const pkgJson = require('tailwindcss/package.json');
+const yargs = require('yargs');
+const watch = require('node-watch');
 
-const pkgPath = require.resolve('tailwindcss').replace(pkgJson.main, '');
-const source = fs.readFileSync(path.join(pkgPath, pkgJson.style), 'utf8');
-const {stylesheet} = css.parse(source);
+const compileTailwind = (filename = 'tailwind', config) => {
+	return new Promise((resolve, reject) => {
+		console.log(`Processing ./${filename}.css...`);
+
+		const css = fs.readFileSync(
+			path.resolve(__dirname, `./${filename}.css`),
+			'utf8'
+		);
+
+		return postcss([tailwind(config), require('autoprefixer')])
+			.process(css, {
+				from: path.resolve(__dirname, `./${filename}.css`),
+				to: path.resolve(__dirname, `./dist/${filename}.css`),
+				map: {inline: false}
+			})
+			.then(result => {
+				resolve(result);
+			})
+			.catch(error => {
+				console.log(error);
+				reject();
+			});
+	});
+};
 
 const remToPx = value => `${parseFloat(value) * 16}px`;
 
-const getStyles = (rule) => {
-  const styles = rule.declarations
-    .filter(({ property, value }) => {
-      // skip usage of vars I don't think they do anything
-      if (value.includes("var(")) {
-        return false
-      }
+const getStyles = rule => {
+	const styles = rule.declarations
+		.filter(({property, value}) => {
+			// skip usage of vars I don't think they do anything
+			if (value.includes('var(')) {
+				return false;
+			}
 
-      // remove var properties
-      if (property.includes('--')) {
-        return false
-      }
+			// remove var properties
+			if (property.includes('--')) {
+				return false;
+			}
 
-      // Skip line-height utilities without units
-      if (property === 'line-height') {
-        return false
-      }
+			// Skip line-height utilities without units
+			if (property === 'line-height') {
+				return false;
+			}
 
-      return true
-    })
-    .map(({ property, value }) => {
-      if (value.endsWith('rem')) {
-        return [property, remToPx(value)]
-      }
+			return true;
+		})
+		.map(({property, value}) => {
+			if (value.endsWith('rem')) {
+				return [property, remToPx(value)];
+			}
 
-      return [property, value]
-    })
+			return [property, value];
+		});
 
-  return cssToReactNative(styles)
-}
+	return cssToReactNative(styles);
+};
 
 const supportedUtilities = [
 	// Flexbox
@@ -114,27 +141,55 @@ const isUtilitySupported = utility => {
 	return false;
 };
 
-// Mapping of Tailwind class names to React Native styles
-const styles = {};
+const mapClassNames = stylesheet => {
+	// Mapping of Tailwind class names to React Native styles
+	const styles = {};
 
-for (const rule of stylesheet.rules) {
-	if (rule.type === 'rule') {
-		for (const selector of rule.selectors) {
-			const utility = selector.replace(/^\./, '').replace('\\/', '/');
+	for (const rule of stylesheet.rules) {
+		if (rule.type === 'rule') {
+			for (const selector of rule.selectors) {
+				const utility = selector.replace(/^\./, '').replace('\\/', '/');
 
-			if (isUtilitySupported(utility)) {
-				styles[utility] = getStyles(rule);
+				if (isUtilitySupported(utility)) {
+					styles[utility] = getStyles(rule);
+				}
 			}
 		}
 	}
+
+	// Additional styles that we're not able to parse correctly automatically
+	styles.underline = {textDecorationLine: 'underline'};
+	styles['line-through'] = {textDecorationLine: 'line-through'};
+	styles['no-underline'] = {textDecorationLine: 'none'};
+
+	fs.writeFileSync(
+		path.join(__dirname, 'styles.json'),
+		JSON.stringify(styles, null, '\t')
+	);
+};
+
+const pkgPath = require.resolve('tailwindcss').replace(pkgJson.main, '');
+const customConfig = path.resolve(process.cwd(), yargs.argv.config);
+
+if (fs.existsSync(customConfig)) {
+	if (yargs.argv.watch) {
+		watch(customConfig, {recursive: true}, function(evt, name) {
+			console.log('%s changed.', name);
+			compileTailwind('tailwind', customConfig).then(result => {
+				const {stylesheet} = css.parse(result.css);
+				mapClassNames(stylesheet);
+			});
+		});
+	}
+
+	compileTailwind('tailwind', customConfig).then(result => {
+		const {stylesheet} = css.parse(result.css);
+		mapClassNames(stylesheet);
+	});
+} else {
+	const source = fs.readFileSync(path.join(pkgPath, pkgJson.style), 'utf8');
+	const {stylesheet} = css.parse(source);
+	mapClassNames(stylesheet);
 }
 
-// Additional styles that we're not able to parse correctly automatically
-styles.underline = {textDecorationLine: 'underline'};
-styles['line-through'] = {textDecorationLine: 'line-through'};
-styles['no-underline'] = {textDecorationLine: 'none'};
-
-fs.writeFileSync(
-	path.join(__dirname, 'styles.json'),
-	JSON.stringify(styles, null, '\t')
-);
+return;
