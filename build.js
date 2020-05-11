@@ -2,10 +2,8 @@
 const path = require('path');
 const fs = require('fs');
 const css = require('css');
-const process = require('process');
 const postcss = require('postcss');
 const tailwind = require('tailwindcss');
-const CleanCSS = require('clean-css');
 const cssToReactNative = require('css-to-react-native').default;
 const pkgJson = require('tailwindcss/package.json');
 const yargs = require('yargs');
@@ -173,7 +171,7 @@ const pkgPath = require.resolve('tailwindcss').replace(pkgJson.main, '');
 if (yargs.argv.config) {
 	const customConfig = path.resolve(process.cwd(), yargs.argv.config);
 	if (yargs.argv.watch) {
-		watch(customConfig, {recursive: true}, function(evt, name) {
+		watch(customConfig, {recursive: true}, (evt, name) => {
 			console.log('%s changed.', name);
 			compileTailwind('tailwind', customConfig).then(result => {
 				const {stylesheet} = css.parse(result.css);
@@ -191,5 +189,3 @@ if (yargs.argv.config) {
 	const {stylesheet} = css.parse(source);
 	mapClassNames(stylesheet);
 }
-
-return;
