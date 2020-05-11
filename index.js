@@ -26,4 +26,5 @@ const getColor = name => {
 
 module.exports = tailwind;
 module.exports.default = tailwind;
+module.exports.tw = tailwind;
 module.exports.getColor = getColor;
