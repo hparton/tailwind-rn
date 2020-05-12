@@ -89,7 +89,7 @@ const supportedUtilities = [
 	// Padding
 	/^(p.?-\d+|p.?-px)/,
 	// Margin
-	/^-?(m.?-\d+|m.?-px)/,
+	/^-?(m.?-\d+|m.?-px|m.?-auto)/,
 	// Width
 	/^w-(\d|\/)+|^w-px|^w-full/,
 	// Height
