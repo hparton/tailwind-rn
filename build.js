@@ -114,7 +114,7 @@ const supportedUtilities = [
 	'capitalize',
 	'normal-case',
 	// Background color
-	/^bg-(transparent|black|white|gray|red|orange|yellow|green|teal|blue|indigo|purple|pink)/,
+	/^bg-(?!current)/,
 	// Border color, style, width, radius
 	'border',
 	/^border-(?!current)/,
